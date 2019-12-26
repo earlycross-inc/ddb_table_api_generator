@@ -1,0 +1,28 @@
+- tableName: TUser
+  primaryIndex:
+    pk:
+      attrName: uid
+      attrType: string
+
+- tableName: TUserHoge
+  primaryIndex:
+    pk:
+      attrName: uid
+      attrType: int
+    sk:
+      attrName: hoge_id
+      attrType: int
+
+  secondaryIndexes:
+    fuga-index:
+      pk:
+        attrName: fuga
+        attrType: string
+
+    poyo-index:
+      pk:
+        attrName: poyo
+        attrType: string
+      sk:
+        attrName: value
+        attrType: int64
