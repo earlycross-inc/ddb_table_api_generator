@@ -95,11 +95,17 @@ func generateAPIOnPrimIdx(tblName string, idx indexDef, buf io.Writer) {
 		fmt.Fprintf(buf, withSimplePrimaryIndexTemplate, tblNameLCamel, tblNameUCamel, pkNameLCamel, pkTypeName, idx.PK.Name)
 	} else {
 		pkNameLCamel := strcase.ToLowerCamel(idx.PK.Name)
+		pkNameUCamel := strcase.ToCamel(idx.PK.Name)
 		pkTypeName := attrType2GoType[idx.PK.Type]
+
 		skNameLCamel := strcase.ToLowerCamel(idx.SK.Name)
+		skNameUCamel := strcase.ToCamel(idx.SK.Name)
 		skTypeName := attrType2GoType[idx.SK.Type]
 
-		fmt.Fprintf(buf, withCompositePrimaryIndexTemplate, tblNameLCamel, tblNameUCamel, pkNameLCamel, pkTypeName, idx.PK.Name, skNameLCamel, skTypeName, idx.SK.Name)
+		fmt.Fprintf(buf, withCompositePrimaryIndexTemplate,
+			tblNameLCamel, tblNameUCamel,
+			pkNameLCamel, pkNameUCamel, pkTypeName, idx.PK.Name,
+			skNameLCamel, skNameUCamel, skTypeName, idx.SK.Name)
 	}
 }
 
@@ -115,11 +121,17 @@ func generateAPIOnScndIdx(tblName string, idxName string, idx indexDef, buf io.W
 		fmt.Fprintf(buf, withSimpleSecondaryIndexTemplate, tblNameLCamel, tblNameUCamel, idxNameUCamel, idxName, pkNameLCamel, pkTypeName, idx.PK.Name)
 	} else {
 		pkNameLCamel := strcase.ToLowerCamel(idx.PK.Name)
+		pkNameUCamel := strcase.ToCamel(idx.PK.Name)
 		pkTypeName := attrType2GoType[idx.PK.Type]
+
 		skNameLCamel := strcase.ToLowerCamel(idx.SK.Name)
+		skNameUCamel := strcase.ToCamel(idx.SK.Name)
 		skTypeName := attrType2GoType[idx.SK.Type]
 
-		fmt.Fprintf(buf, withCompositeSecondaryIndexTemplate, tblNameLCamel, tblNameUCamel, idxNameUCamel, idxName, pkNameLCamel, pkTypeName, idx.PK.Name, skNameLCamel, skTypeName, idx.SK.Name)
+		fmt.Fprintf(buf, withCompositeSecondaryIndexTemplate,
+			tblNameLCamel, tblNameUCamel, idxNameUCamel, idxName,
+			pkNameLCamel, pkNameUCamel, pkTypeName, idx.PK.Name,
+			skNameLCamel, skNameUCamel, skTypeName, idx.SK.Name)
 	}
 }
 
@@ -172,14 +184,10 @@ func(a *%[1]sAPI) WithPrimaryIndex(%[3]s %[4]s) *withPrimIdx {
 	}
 }
 
-type %[2]sPrimIndex struct {
-	%[3]s	%[4]s
-}
-
-func (a *%[1]sAPI) BatchWithPrimaryIndex(keys []%[2]sPrimIndex) *batchWithPrimIdx {
-	ks := make([]dynamo.Keyed, 0, len(keys))
-	for _, k := range keys {
-		ks = append(ks, dynamo.Keys{k.%[3]s, nil})
+func (a *%[1]sAPI) BatchWithPrimaryIndex(%[3]sList []%[4]s) *batchWithPrimIdx {
+	ks := make([]dynamo.Keyed, 0, len(%[3]sList))
+	for _, %[3]s := range %[3]sList {
+		ks = append(ks, dynamo.Keys{%[3]s, nil})
 	}
 
 	return &batchWithPrimIdx {
@@ -194,48 +202,50 @@ func (a *%[1]sAPI) BatchWithPrimaryIndex(keys []%[2]sPrimIndex) *batchWithPrimId
 // [2]: upper camel of tableName
 //
 // [3]: lower camel of pkName
-// [4]: type name of pkName
-// [5]: raw pkName
+// [4]: upper camel of pkName
+// [5]: type name of pkName
+// [6]: raw pkName
 //
-// [6]: lower camel of skName
-// [7]: type name of skName
-// [8]: raw skName
+// [7]: lower camel of skName
+// [8]: upper camel of skName
+// [9]: type name of skName
+// [10]: raw skName
 const withCompositePrimaryIndexTemplate = `
 // primary index API
-func(a *%[1]sAPI) WithPrimaryIndex(%[3]s %[4]s, %[6]s %[7]s) *withPrimIdx {
+func(a *%[1]sAPI) WithPrimaryIndex(%[3]s %[5]s, %[7]s %[9]s) *withPrimIdx {
 	return &withPrimIdx{
 		table: a.table,
-		pkName: %[5]q,
+		pkName: %[6]q,
 		pkVal: %[3]s,
-		skName: %[8]q,
-		skVal: %[6]s,
+		skName: %[10]q,
+		skVal: %[7]s,
 	}
 }
 
-func (a *%[1]sAPI) QueryWithPrimaryIndex(%[3]s %[4]s) *queryWithPrimIdx {
+func (a *%[1]sAPI) QueryWithPrimaryIndex(%[3]s %[5]s) *queryWithPrimIdx {
 	return &queryWithPrimIdx{
 		table: a.table,
-		pkName: %[5]q,
+		pkName: %[6]q,
 		pkVal: %[3]s,
-		skName: %[8]q,
+		skName: %[10]q,
 	}
 }
 
 type %[2]sPrimIndex struct {
-	%[3]s %[4]s
-	%[6]s %[7]s
+	%[4]s %[5]s
+	%[8]s %[9]s
 }
 
 func (a *%[1]sAPI) BatchWithPrimaryIndex(keys []%[2]sPrimIndex) *batchWithPrimIdx {
 	ks := make([]dynamo.Keyed, 0, len(keys))
 	for _, k := range keys {
-		ks = append(ks, dynamo.Keys{k.%[3]s, k.%[6]s})
+		ks = append(ks, dynamo.Keys{k.%[4]s, k.%[8]s})
 	}
 
 	return &batchWithPrimIdx {
 		table: a.table,
-		pkName: %[5]q,
-		skName: %[8]q,
+		pkName: %[6]q,
+		skName: %[10]q,
 		keys: ks,
 	}
 }
@@ -261,14 +271,10 @@ func(a *%[1]sAPI) With%[3]s(%[5]s %[6]s) *withScndIdx {
 	}
 }
 
-type %[2]s%[3]s struct {
-	%[5]s	%[6]s
-}
-
-func (a *%[1]sAPI) BatchWith%[3]s(keys []%[2]s%[3]s) *batchWithScndIdx {
-	ks := make([]dynamo.Keyed, 0, len(keys))
-	for _, k := range keys {
-		ks = append(ks, dynamo.Keys{k.%[5]s, nil})
+func (a *%[1]sAPI) BatchWith%[3]s(%[5]sList []%[6]s) *batchWithScndIdx {
+	ks := make([]dynamo.Keyed, 0, len(%[5]sList))
+	for _, %[5]s := range %[5]sList {
+		ks = append(ks, dynamo.Keys{%[5]s, nil})
 	}
 
 	return &batchWithScndIdx {
@@ -286,50 +292,52 @@ func (a *%[1]sAPI) BatchWith%[3]s(keys []%[2]s%[3]s) *batchWithScndIdx {
 // [4]: raw indexName
 //
 // [5]: lower camel of pkName
-// [6]: type name of pkName
-// [7]: raw pkName
+// [6]: upper camel of pkName
+// [7]: type name of pkName
+// [8]: raw pkName
 //
-// [8]: lower camel of skName
-// [9]: type name of skName
-// [10]: raw skName
+// [9]: lower camel of skName
+// [10]: upper camel of skName
+// [11]: type name of skName
+// [12]: raw skName
 const withCompositeSecondaryIndexTemplate = `
 // %[4]q (secondary index) API
-func(a *%[1]sAPI) With%[3]s(%[5]s %[6]s, %[8]s %[9]s) *withScndIdx {
+func(a *%[1]sAPI) With%[3]s(%[5]s %[7]s, %[9]s %[11]s) *withScndIdx {
 	return &withScndIdx{
 		table: a.table,
 		idxName: %[4]q,
-		pkName: %[7]q,
+		pkName: %[8]q,
 		pkVal: %[5]s,
-		skName: %[10]q,
-		skVal: %[8]s,
+		skName: %[12]q,
+		skVal: %[9]s,
 	}
 }
 
-func (a *%[1]sAPI) QueryWith%[3]s(%[5]s %[6]s) *queryWithScndIdx {
+func (a *%[1]sAPI) QueryWith%[3]s(%[5]s %[7]s) *queryWithScndIdx {
 	return &queryWithScndIdx{
 		table: a.table,
 		idxName: %[4]q,
-		pkName: %[7]q,
+		pkName: %[8]q,
 		pkVal: %[5]s,
-		skName: %[10]q,
+		skName: %[12]q,
 	}
 }
 
 type %[2]s%[3]s struct {
-	%[5]s %[6]s
-	%[8]s %[9]s
+	%[6]s %[7]s
+	%[10]s %[11]s
 }
 
 func (a *%[1]sAPI) BatchWith%[3]s(keys []%[2]s%[3]s) *batchWithScndIdx {
 	ks := make([]dynamo.Keyed, 0, len(keys))
 	for _, k := range keys {
-		ks = append(ks, dynamo.Keys{k.%[5]s, k.%[8]s})
+		ks = append(ks, dynamo.Keys{k.%[6]s, k.%[10]s})
 	}
 
 	return &batchWithScndIdx {
 		table: a.table,
-		pkName: %[7]q,
-		skName: %[10]q,
+		pkName: %[8]q,
+		skName: %[12]q,
 		keys: ks,
 	}
 }
