@@ -350,7 +350,7 @@ import (
 )
 
 type withPrimIdx struct {
-	table  dynamo.Table
+	table dynamo.Table
 
 	pkName string
 	pkVal  interface{}
@@ -386,10 +386,10 @@ type withScndIdx struct {
 	table   dynamo.Table
 	idxName string
 
-	pkName  string
-	pkVal   interface{}
-	skName  string
-	skVal   interface{}
+	pkName string
+	pkVal  interface{}
+	skName string
+	skVal  interface{}
 }
 
 func (i *withScndIdx) Get() *dynamo.Query {
@@ -401,12 +401,16 @@ func (i *withScndIdx) Get() *dynamo.Query {
 }
 
 type queryWithPrimIdx struct {
-	table  dynamo.Table
+	table dynamo.Table
 
 	pkName string
 	pkVal  interface{}
 
 	skName string
+}
+
+func (i *queryWithPrimIdx) All() *dynamo.Query {
+	return i.table.Get(i.pkName, i.pkVal)
 }
 
 func (i *queryWithPrimIdx) WhereSK(op dynamo.Operator, sk interface{}) *dynamo.Query {
@@ -417,9 +421,13 @@ type queryWithScndIdx struct {
 	table   dynamo.Table
 	idxName string
 
-	pkName  string
-	pkVal   interface{}
-	skName  string
+	pkName string
+	pkVal  interface{}
+	skName string
+}
+
+func (i *queryWithScndIdx) All() *dynamo.Query {
+	return i.table.Get(i.pkName, i.pkVal).Index(i.idxName)
 }
 
 func (i *queryWithScndIdx) WhereSK(op dynamo.Operator, sk interface{}) *dynamo.Query {
@@ -427,7 +435,7 @@ func (i *queryWithScndIdx) WhereSK(op dynamo.Operator, sk interface{}) *dynamo.Q
 }
 
 type batchWithPrimIdx struct {
-	table  dynamo.Table
+	table dynamo.Table
 
 	pkName string
 	skName string
@@ -457,7 +465,7 @@ func (i *batchWithPrimIdx) Delete() *dynamo.BatchWrite {
 }
 
 type batchWithScndIdx struct {
-	table  dynamo.Table
+	table dynamo.Table
 
 	pkName string
 	skName string
