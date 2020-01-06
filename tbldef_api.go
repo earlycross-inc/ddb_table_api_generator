@@ -22,8 +22,8 @@ func (t tableDef) isValid() bool {
 }
 
 type indexDef struct {
-	PK attrDefY `yaml:"pk"`
-	SK attrDefY `yaml:"sk"`
+	PK attrDef `yaml:"pk"`
+	SK attrDef `yaml:"sk"`
 }
 
 func (i indexDef) isValid() bool {
@@ -34,16 +34,16 @@ func (i indexDef) isSimple() bool {
 	return i.PK.isValid() && i.SK.isEmpty()
 }
 
-type attrDefY struct {
+type attrDef struct {
 	Name string `yaml:"attrName"`
 	Type string `yaml:"attrType"`
 }
 
-func (a attrDefY) isValid() bool {
+func (a attrDef) isValid() bool {
 	return (a.Name != "" && isValidAttrType(a.Type)) || a.isEmpty()
 }
 
-func (a attrDefY) isEmpty() bool {
+func (a attrDef) isEmpty() bool {
 	return a.Name == "" && a.Type == ""
 }
 
