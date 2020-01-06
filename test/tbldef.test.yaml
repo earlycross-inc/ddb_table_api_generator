@@ -1,0 +1,29 @@
+- tableName: TUser
+  primaryIndex:
+    pk:
+      attrName: uid
+      attrType: int
+
+  secondaryIndexes:
+    name-index:
+      pk:
+        attrName: name
+        attrType: string
+
+- tableName: TUserStageRanking
+  primaryIndex:
+    pk:
+      attrName: uid
+      attrType: int
+    sk:
+      attrName: stg_id
+      attrType: int64
+
+  secondaryIndexes:
+    pkey-index:
+      pk:
+        attrName: pkey
+        attrType: string
+      sk:
+        attrName: score
+        attrType: int
