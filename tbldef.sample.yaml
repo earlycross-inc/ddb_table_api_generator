@@ -4,6 +4,15 @@
       attrName: uid
       attrType: string
 
+  secondaryIndexes:
+    latest-index:
+      pk:
+        attrName: uid
+        attrType: string
+      sk:
+        attrName: update_time
+        attrType: int64
+
 - tableName: TUserHoge
   primaryIndex:
     pk:

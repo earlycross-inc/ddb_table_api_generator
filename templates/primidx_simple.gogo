@@ -1,0 +1,26 @@
+// primary index API
+func(a *{{.TblName.LCamel}}API) WithPrimaryIndex({{.PK.AttrName.LCamel}} {{.PK.Type.GoType}}) *withPrimIdx {
+	return &withPrimIdx{
+		table: a.table,
+		pkName: {{.PK.AttrName.Quoted}},
+		pkVal: {{.PK.AttrName.LCamel}},
+	}
+}
+
+func (a *{{.TblName.LCamel}}API) BatchWithPrimaryIndex({{.PK.AttrName.LCamel}}List []{{.PK.Type.GoType}}) *batchWithPrimIdx {
+  dedup := make(map[{{.PK.Type.GoType}}]struct{})
+  for _, k := range {{.PK.AttrName.LCamel}}List {
+    dedup[k] = struct{}{}
+  }
+
+	ks := make([]dynamo.Keyed, 0, len(dedup))
+	for k := range dedup {
+		ks = append(ks, dynamo.Keys{ k, nil })
+	}
+
+	return &batchWithPrimIdx {
+		table: a.table,
+		pkName: {{.PK.AttrName.Quoted}},
+		keys: ks,
+	}
+}

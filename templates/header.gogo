@@ -1,0 +1,28 @@
+package ddbtbl
+
+import "github.com/guregu/dynamo"
+
+type {{.TblName.LCamel}}API struct {
+	table dynamo.Table
+}
+
+// {{.TblName.UCamel}} is the entry point of manipulation of {{.TblName.Quoted}}.
+func {{.TblName.UCamel}}(d *dynamo.DB) *{{.TblName.LCamel}}API {
+	return &{{.TblName.LCamel}}API{table: d.Table({{.TblName.Quoted}})}
+}
+
+// index-free APIs
+// Scan on {{.TblName.Quoted}}.
+func (a *{{.TblName.LCamel}}API) Scan() *dynamo.Scan {
+	return a.table.Scan()
+}
+
+// Put item to {{.TblName.Quoted}}.
+func (a *{{.TblName.LCamel}}API) Put(item interface{}) *dynamo.Put {
+	return a.table.Put(item)
+}
+
+// BatchPut puts items to {{.TblName.Quoted}}.
+func (a *{{.TblName.LCamel}}API) BatchPut(items ...interface{}) *dynamo.BatchWrite {
+	return a.table.Batch().Write().Put(items)
+}

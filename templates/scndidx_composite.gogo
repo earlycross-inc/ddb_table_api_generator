@@ -1,0 +1,45 @@
+// {{.IdxName.Quoted}} (secondary index) API
+func(a *{{.TblName.LCamel}}API) With{{.IdxName.UCamel}}({{.PK.AttrName.LCamel}} {{.PK.Type.GoType}}, {{.SK.AttrName.LCamel}} {{.SK.Type.GoType}}) *withScndIdx {
+	return &withScndIdx{
+		table: a.table,
+		idxName: {{.IdxName.Quoted}},
+		pkName: {{.PK.AttrName.Quoted}},
+		pkVal: {{.PK.AttrName.LCamel}},
+		skName: {{.SK.AttrName.Quoted}},
+		skVal: {{.SK.AttrName.LCamel}},
+	}
+}
+
+func (a *{{.TblName.LCamel}}API) QueryWith{{.IdxName.UCamel}}({{.PK.AttrName.LCamel}} {{.PK.Type.GoType}}) *queryWithScndIdx {
+	return &queryWithScndIdx{
+		table: a.table,
+		idxName: {{.IdxName.Quoted}},
+		pkName: {{.PK.AttrName.Quoted}},
+		pkVal: {{.PK.AttrName.LCamel}},
+		skName: {{.SK.AttrName.Quoted}},
+	}
+}
+
+type {{.TblName.UCamel}}{{.IdxName.UCamel}} struct {
+	{{.PK.AttrName.UCamel}} {{.PK.Type.GoType}}
+	{{.SK.AttrName.UCamel}} {{.SK.Type.GoType}}
+}
+
+func (a *{{.TblName.LCamel}}API) BatchWith{{.IdxName.UCamel}}(keys []{{.TblName.UCamel}}{{.IdxName.UCamel}}) *batchWithScndIdx {
+  dedup := make(map[{{.TblName.UCamel}}{{.IdxName.UCamel}}]struct{})
+  for _, k := range keys {
+    dedup[k] = struct{}{}
+  }
+
+	ks := make([]dynamo.Keyed, 0, len(dedup))
+	for k := range dedup {
+		ks = append(ks, dynamo.Keys{ k.{{.PK.AttrName.UCamel}}, k.{{.SK.AttrName.UCamel}} })
+	}
+
+	return &batchWithScndIdx {
+		table: a.table,
+		pkName: {{.PK.AttrName.Quoted}},
+		skName: {{.SK.AttrName.Quoted}},
+		keys: ks,
+	}
+}

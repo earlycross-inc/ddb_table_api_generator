@@ -1,0 +1,15 @@
+{{template "header.gogo" .}}
+
+{{if .PrimIdx.IsSimple}}
+{{template "primidx_simple.gogo" .PrimIdx}}
+{{else}}
+{{template "primidx_composite.gogo" .PrimIdx}}
+{{end}}
+
+{{range .ScndIdxes}}
+{{if .IsSimple}}
+{{template "scndidx_simple.gogo" .}}
+{{else}}
+{{template "scndidx_composite.gogo" .}}
+{{end}}
+{{end}}
