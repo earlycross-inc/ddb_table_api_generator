@@ -24,7 +24,7 @@ func (a *tUserAPI) Put(item interface{}) *dynamo.Put {
 
 // BatchPut puts items to "TUser".
 func (a *tUserAPI) BatchPut(items ...interface{}) *dynamo.BatchWrite {
-	return a.table.Batch().Write().Put(items)
+	return a.table.Batch().Write().Put(items...)
 }
 
 // primary index API

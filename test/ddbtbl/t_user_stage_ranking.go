@@ -24,7 +24,7 @@ func (a *tUserStageRankingAPI) Put(item interface{}) *dynamo.Put {
 
 // BatchPut puts items to "TUserStageRanking".
 func (a *tUserStageRankingAPI) BatchPut(items ...interface{}) *dynamo.BatchWrite {
-	return a.table.Batch().Write().Put(items)
+	return a.table.Batch().Write().Put(items...)
 }
 
 // primary index API

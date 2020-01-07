@@ -3,7 +3,9 @@ $container_name = docker run -d -p "8100:8000" amazon/dynamodb-local -jar Dynamo
 
 # generate table API
 pushd ..
-go run .\... -def .\test\tbldef.test.yaml -out .\test\ddbtbl
+go build -o gen.exe
+.\gen.exe -def .\test\tbldef.test.yaml -out .\test\ddbtbl
+rm .\gen.exe
 popd
 
 # run tests
