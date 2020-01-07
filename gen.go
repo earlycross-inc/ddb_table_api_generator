@@ -12,14 +12,35 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"gopkg.in/yaml.v2"
+	"github.com/gobuffalo/packr/v2"
 )
+
+func parseTemplates() (*template.Template, error) {
+	tempFileBox := packr.New("tempFileBox", "./templates")
+
+	temp := template.New("root")
+	var err error
+	for _, tempName := range tempFileBox.List() {
+		tempStr, _ := tempFileBox.FindString(tempName)
+		temp, err = temp.New(tempName).Parse(tempStr)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return temp, nil
+}
 
 func generateAll(defFilename string, outDir string) {
 	// parse templates
-	temp := template.Must(template.ParseGlob("./templates/*.gogo"))
+	temp, err := parseTemplates()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	// create output directory
-	err := os.MkdirAll(outDir, 0666)
+	err = os.MkdirAll(outDir, 0666)
 	if err != nil {
 		log.Println(err)
 		return
