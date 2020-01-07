@@ -92,27 +92,3 @@ func (a *tUserStageRankingAPI) QueryWithPkeyIndex(pkey string) *queryWithScndIdx
 		skName:  "score",
 	}
 }
-
-type TUserStageRankingPkeyIndex struct {
-	Pkey  string
-	Score int
-}
-
-func (a *tUserStageRankingAPI) BatchWithPkeyIndex(keys []TUserStageRankingPkeyIndex) *batchWithScndIdx {
-	dedup := make(map[TUserStageRankingPkeyIndex]struct{})
-	for _, k := range keys {
-		dedup[k] = struct{}{}
-	}
-
-	ks := make([]dynamo.Keyed, 0, len(dedup))
-	for k := range dedup {
-		ks = append(ks, dynamo.Keys{k.Pkey, k.Score})
-	}
-
-	return &batchWithScndIdx{
-		table:  a.table,
-		pkName: "pkey",
-		skName: "score",
-		keys:   ks,
-	}
-}

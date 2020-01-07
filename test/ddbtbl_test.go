@@ -114,16 +114,6 @@ func TestSimpleIndexAPI(t *testing.T) {
 		t.Fatalf("num of fetched users mismatch. got=%d, want=2", len(getUsers))
 	}
 
-	targetNames := []string{"test1", "test3", "test1"}
-	getUsers = make([]tUser, 0)
-	err = tUserAPI.BatchWithNameIndex(targetNames).Get().All(&getUsers)
-	if err != nil {
-		t.Fatal("failed to batchGet with name: ", err)
-	}
-	if len(getUsers) != 2 {
-		t.Fatalf("num of fetched users(by name) mismatch. got=%d, want=2", len(getUsers))
-	}
-
 	delUIDs := []int{1, 2}
 	_, err = tUserAPI.BatchWithPrimaryIndex(delUIDs).Delete().
 		Put(tUser{UID: 4, Name: "test4"}, tUser{UID: 5, Name: "test5"}).
@@ -248,19 +238,5 @@ func TestCompositeIndexAPI(t *testing.T) {
 	}
 	if len(getRecords) != 3 {
 		t.Fatalf("num of fetched records by bacthGet(with prim key) mismatch. got=%d, want=3", len(getRecords))
-	}
-
-	pkeyIdxKeys := []ddbtbl.TUserStageRankingPkeyIndex{
-		{Pkey: "p-1", Score: 100},
-		{Pkey: "p-2", Score: 200},
-		{Pkey: "p-1", Score: 100},
-	}
-	getRecords = make([]tUserStageRanking, 0)
-	err = tRankingAPI.BatchWithPkeyIndex(pkeyIdxKeys).Get().All(&getRecords)
-	if err != nil {
-		t.Fatal("failed to batchGet with secondary key: ", err)
-	}
-	if len(getRecords) != 2 {
-		t.Fatalf("num of fetched records by batchGet(with scnd key) mismatch. got=%d, want=2", len(getRecords))
 	}
 }

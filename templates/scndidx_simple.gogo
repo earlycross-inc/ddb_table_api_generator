@@ -7,21 +7,3 @@ func(a *{{.TblName.LCamel}}API) With{{.IdxName.UCamel}}({{.PK.AttrName.LCamel}} 
 		pkVal: {{.PK.AttrName.LCamel}},
 	}
 }
-
-func (a *{{.TblName.LCamel}}API) BatchWith{{.IdxName.UCamel}}({{.PK.AttrName.LCamel}}List []{{.PK.Type.GoType}}) *batchWithScndIdx {
-  dedup := make(map[{{.PK.Type.GoType}}]struct{})
-  for _, k := range {{.PK.AttrName.LCamel}}List {
-    dedup[k] = struct{}{}
-  }
-
-	ks := make([]dynamo.Keyed, 0, len(dedup))
-	for k := range dedup {
-		ks = append(ks, dynamo.Keys{ k, nil })
-	}
-
-	return &batchWithScndIdx {
-		table: a.table,
-		pkName: {{.PK.AttrName.Quoted}},
-		keys: ks,
-	}
-}

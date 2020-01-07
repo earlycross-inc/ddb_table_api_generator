@@ -118,22 +118,3 @@ func (i *batchWithPrimIdx) Delete() *dynamo.BatchWrite {
 
 	return batch.Write().Delete(i.keys...)
 }
-
-type batchWithScndIdx struct {
-	table dynamo.Table
-
-	pkName string
-	skName string
-	keys   []dynamo.Keyed
-}
-
-func (i *batchWithScndIdx) Get() *dynamo.BatchGet {
-	var batch dynamo.Batch
-	if i.skName == "" {
-		batch = i.table.Batch(i.pkName)
-	} else {
-		batch = i.table.Batch(i.pkName, i.skName)
-	}
-
-	return batch.Get(i.keys...)
-}

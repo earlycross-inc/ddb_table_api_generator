@@ -63,21 +63,3 @@ func (a *tUserAPI) WithNameIndex(name string) *withScndIdx {
 		pkVal:   name,
 	}
 }
-
-func (a *tUserAPI) BatchWithNameIndex(nameList []string) *batchWithScndIdx {
-	dedup := make(map[string]struct{})
-	for _, k := range nameList {
-		dedup[k] = struct{}{}
-	}
-
-	ks := make([]dynamo.Keyed, 0, len(dedup))
-	for k := range dedup {
-		ks = append(ks, dynamo.Keys{k, nil})
-	}
-
-	return &batchWithScndIdx{
-		table:  a.table,
-		pkName: "name",
-		keys:   ks,
-	}
-}
