@@ -8,11 +8,12 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"text/template"
 
+	"github.com/gobuffalo/packr/v2"
 	"github.com/iancoleman/strcase"
 	"gopkg.in/yaml.v2"
-	"github.com/gobuffalo/packr/v2"
 )
 
 func parseTemplates() (*template.Template, error) {
@@ -31,45 +32,59 @@ func parseTemplates() (*template.Template, error) {
 	return temp, nil
 }
 
-func generateAll(defFilename string, outDir string) {
+// remove all contents in outDir if outDir exists
+// if not, create ourDir
+func cleanUpOutputDir(outDir string) error {
+	if _, err := os.Stat(outDir); os.IsNotExist(err) {
+		return os.MkdirAll(outDir, 0775)
+	}
+
+	files, err := filepath.Glob(filepath.Join(outDir, "*"))
+	if err != nil {
+		return err
+	}
+	for _, fpath := range files {
+		err := os.RemoveAll(fpath)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func generateAll(defFilename string, outDir string) error {
 	// parse templates
 	temp, err := parseTemplates()
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 
-	// create output directory
-	err = os.MkdirAll(outDir, 0666)
+	// clean up output directory
+	err = cleanUpOutputDir(outDir)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 
 	// write a source file defines logics used by DDB table APIs
 	ddbapiSrcPath := path.Join(outDir, "ddbapi.go")
 	ddbapiSrcFile, err := os.OpenFile(ddbapiSrcPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 	err = temp.ExecuteTemplate(ddbapiSrcFile, "ddbapi_src.gogo", nil)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 
 	// read table definition file
 	defs := make([]tableDef, 0)
 	defFile, err := os.Open(defFilename)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 	err = yaml.NewDecoder(defFile).Decode(&defs)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 
 	// generate table API for each table definition
@@ -93,6 +108,7 @@ func generateAll(defFilename string, outDir string) {
 			continue
 		}
 	}
+	return nil
 }
 
 func generateTableAPI(tbl tableGenDef, temp *template.Template) ([]byte, error) {

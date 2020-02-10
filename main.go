@@ -1,6 +1,9 @@
 package main
 
-import "flag"
+import (
+	"flag"
+	"log"
+)
 
 func main() {
 	var (
@@ -12,5 +15,8 @@ func main() {
 	flag.StringVar(&outputDir, "out", "./ddbtbl", "path to output generated table API files")
 	flag.Parse()
 
-	generateAll(defFilename, outputDir)
+	err := generateAll(defFilename, outputDir)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
