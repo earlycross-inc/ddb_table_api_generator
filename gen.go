@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"text/template"
 
@@ -32,14 +31,14 @@ func parseTemplates() (*template.Template, error) {
 	return temp, nil
 }
 
-// remove all contents in outDir if outDir exists
-// if not, create ourDir
+// if outDir exists, remove generated files in outDir
+// else create ourDir
 func cleanUpOutputDir(outDir string) error {
 	if _, err := os.Stat(outDir); os.IsNotExist(err) {
 		return os.MkdirAll(outDir, 0775)
 	}
 
-	files, err := filepath.Glob(filepath.Join(outDir, "*"))
+	files, err := filepath.Glob(pathForGeneratedFile(outDir, "*"))
 	if err != nil {
 		return err
 	}
@@ -50,6 +49,13 @@ func cleanUpOutputDir(outDir string) error {
 		}
 	}
 	return nil
+}
+
+// suffix for path of generated files
+const generatedFileSuffix = "gen"
+
+func pathForGeneratedFile(outDir string, name string) string {
+	return filepath.Join(outDir, fmt.Sprintf("%s_%s.go", name, generatedFileSuffix))
 }
 
 func generateAll(defFilename string, outDir string) error {
@@ -66,7 +72,8 @@ func generateAll(defFilename string, outDir string) error {
 	}
 
 	// write a source file defines logics used by DDB table APIs
-	ddbapiSrcPath := path.Join(outDir, "ddbapi.go")
+
+	ddbapiSrcPath := pathForGeneratedFile(outDir, "ddbapi")
 	ddbapiSrcFile, err := os.OpenFile(ddbapiSrcPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
 	if err != nil {
 		return err
@@ -94,15 +101,14 @@ func generateAll(defFilename string, outDir string) error {
 			continue
 		}
 
-		buf, err := generateTableAPI(tblDef.toGenDef(), temp)
+		buf, err := generateTableAPISrc(tblDef.toGenDef(), temp)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 
-		filename := fmt.Sprintf("%s.go", strcase.ToSnake(tblDef.Name))
-		outPath := path.Join(outDir, filename)
-		err = ioutil.WriteFile(outPath, buf, 0666)
+		apiSrcPath := pathForGeneratedFile(outDir, strcase.ToSnake(tblDef.Name))
+		err = ioutil.WriteFile(apiSrcPath, buf, 0666)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -111,7 +117,7 @@ func generateAll(defFilename string, outDir string) error {
 	return nil
 }
 
-func generateTableAPI(tbl tableGenDef, temp *template.Template) ([]byte, error) {
+func generateTableAPISrc(tbl tableGenDef, temp *template.Template) ([]byte, error) {
 	buf := new(bytes.Buffer)
 
 	err := temp.ExecuteTemplate(buf, "tblapi.gogo", tbl)
