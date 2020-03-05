@@ -160,7 +160,9 @@ func generateAWSDDBTableDefs(tblDefs []tableDef, outDir string) error {
 			}
 			defer f.Close()
 
-			_ = json.NewEncoder(f).Encode(awsDef)
+			enc := json.NewEncoder(f)
+			enc.SetIndent("", "  ")
+			_ = enc.Encode(awsDef)
 		}()
 	}
 	return nil
