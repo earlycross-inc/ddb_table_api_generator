@@ -5,6 +5,7 @@ type tableDef struct {
 	Name             string              `yaml:"tableName"`
 	PrimaryIndex     indexDef            `yaml:"primaryIndex"`
 	SecondaryIndexes map[string]indexDef `yaml:"secondaryIndexes"`
+	StreamEnabled    bool                `yaml:"streamEnabled"`
 }
 
 // テーブル定義を検証し、妥当かどうかを返す

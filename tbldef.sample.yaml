@@ -3,7 +3,6 @@
     pk:
       attrName: uid
       attrType: string
-
   secondaryIndexes:
     latest-index:
       pk:
@@ -12,6 +11,7 @@
       sk:
         attrName: update_time
         attrType: int64
+  streamEnabled: true
 
 - tableName: TUserHoge
   primaryIndex:
@@ -21,7 +21,6 @@
     sk:
       attrName: hoge_id
       attrType: int
-
   secondaryIndexes:
     fuga-index:
       pk:
@@ -35,3 +34,4 @@
       sk:
         attrName: value
         attrType: int64
+  streamEnabled: false

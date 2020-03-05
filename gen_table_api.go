@@ -12,7 +12,6 @@ import (
 
 	"github.com/gobuffalo/packr/v2"
 	"github.com/iancoleman/strcase"
-	"gopkg.in/yaml.v2"
 )
 
 func parseTemplates() (*template.Template, error) {
@@ -58,7 +57,7 @@ func pathForGeneratedFile(outDir string, name string) string {
 	return filepath.Join(outDir, fmt.Sprintf("%s_%s.go", name, generatedFileSuffix))
 }
 
-func generateAll(defFilename string, outDir string) error {
+func generateTableAPI(tblDefs []tableDef, outDir string) error {
 	// parse templates
 	temp, err := parseTemplates()
 	if err != nil {
@@ -72,7 +71,6 @@ func generateAll(defFilename string, outDir string) error {
 	}
 
 	// write a source file defines logics used by DDB table APIs
-
 	ddbapiSrcPath := pathForGeneratedFile(outDir, "ddbapi")
 	ddbapiSrcFile, err := os.OpenFile(ddbapiSrcPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
 	if err != nil {
@@ -83,24 +81,8 @@ func generateAll(defFilename string, outDir string) error {
 		return err
 	}
 
-	// read table definition file
-	defs := make([]tableDef, 0)
-	defFile, err := os.Open(defFilename)
-	if err != nil {
-		return err
-	}
-	err = yaml.NewDecoder(defFile).Decode(&defs)
-	if err != nil {
-		return err
-	}
-
 	// generate table API for each table definition
-	for _, tblDef := range defs {
-		if !tblDef.isValid() {
-			log.Printf("invalid table definition. table name: %s", tblDef.Name)
-			continue
-		}
-
+	for _, tblDef := range tblDefs {
 		buf, err := generateTableAPISrc(tblDef.toGenDef(), temp)
 		if err != nil {
 			log.Println(err)
