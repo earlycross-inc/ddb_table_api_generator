@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
 	"go/format"
 	"log"
@@ -10,22 +11,16 @@ import (
 	"text/template"
 
 	"github.com/ettle/strcase"
-	"github.com/gobuffalo/packr/v2"
 )
 
+//go:embed templates/*
+var templateDir embed.FS
+
 func parseTemplates() (*template.Template, error) {
-	tempFileBox := packr.New("tempFileBox", "./templates")
-
-	temp := template.New("root")
-	var err error
-	for _, tempName := range tempFileBox.List() {
-		tempStr, _ := tempFileBox.FindString(tempName)
-		temp, err = temp.New(tempName).Parse(tempStr)
-		if err != nil {
-			return nil, err
-		}
+	temp, err := template.ParseFS(templateDir, "templates/*.gogo")
+	if err != nil {
+		return nil, err
 	}
-
 	return temp, nil
 }
 
