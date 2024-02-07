@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/ettle/strcase"
 	"github.com/gobuffalo/packr/v2"
-	"github.com/iancoleman/strcase"
 )
 
 func parseTemplates() (*template.Template, error) {

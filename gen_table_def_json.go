@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/iancoleman/strcase"
+	"github.com/ettle/strcase"
 )
 
 type awsDDBTableDef struct {

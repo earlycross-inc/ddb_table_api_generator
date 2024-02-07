@@ -9,7 +9,6 @@ require (
 	github.com/gobuffalo/packd v1.0.2 // indirect
 	github.com/gobuffalo/packr/v2 v2.8.3
 	github.com/guregu/dynamo v1.21.0
-	github.com/iancoleman/strcase v0.2.0
 	github.com/karrick/godirwalk v1.17.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
