@@ -3,10 +3,10 @@ package test
 import (
 	"testing"
 
-	"bitbucket.org/earlycross/ddb_table_api_generator/test/ddbtbl"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/earlycross-inc/ddb_table_api_generator/test/ddbtbl"
 	"github.com/guregu/dynamo"
 )
 

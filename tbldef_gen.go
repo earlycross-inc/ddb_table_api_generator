@@ -3,18 +3,18 @@ package main
 import (
 	"fmt"
 
-	"github.com/iancoleman/strcase"
+	"github.com/ettle/strcase"
 )
 
 // case変換用の拡張メソッドを生やしたstring
 type caseString string
 
 func (cs caseString) LCamel() caseString {
-	return caseString(strcase.ToLowerCamel(string(cs)))
+	return caseString(strcase.ToCamel(string(cs)))
 }
 
 func (cs caseString) UCamel() caseString {
-	return caseString(strcase.ToCamel(string(cs)))
+	return caseString(strcase.ToPascal(string(cs)))
 }
 
 func (cs caseString) Quoted() caseString {

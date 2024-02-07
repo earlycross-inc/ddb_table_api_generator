@@ -5,4 +5,4 @@
 // and any other packr generated files.
 package main
 
-import _ "bitbucket.org/earlycross/ddb_table_api_generator/packrd"
+import _ "github.com/earlycross-inc/ddb_table_api_generator/packrd"
