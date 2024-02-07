@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"go/format"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -90,7 +89,7 @@ func generateTableAPI(tblDefs []tableDef, outDir string) error {
 		}
 
 		apiSrcPath := pathForGeneratedFile(outDir, strcase.ToSnake(tblDef.Name))
-		err = ioutil.WriteFile(apiSrcPath, buf, 0666)
+		err = os.WriteFile(apiSrcPath, buf, 0666)
 		if err != nil {
 			log.Println(err)
 			continue
