@@ -3,8 +3,21 @@
 package ddbtbl
 
 import (
+  "sync"
+
 	"github.com/guregu/dynamo"
 )
+
+var (
+  tableNamePrefix string
+  once sync.Once
+)
+
+func SetTableNamePrefix(prefix string) {
+  once.Do(func() {
+    tableNamePrefix = prefix
+  })
+}
 
 type withPrimIdx struct {
 	table dynamo.Table

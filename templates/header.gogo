@@ -2,7 +2,11 @@
 
 package ddbtbl
 
-import "github.com/guregu/dynamo"
+import (
+  "fmt"
+
+  "github.com/guregu/dynamo"
+)
 
 type {{.TblName.LCamel}}API struct {
 	table dynamo.Table
@@ -10,7 +14,7 @@ type {{.TblName.LCamel}}API struct {
 
 // {{.TblName.UCamel}} is the entry point of manipulation of {{.TblName.Quoted}}.
 func {{.TblName.UCamel}}(d *dynamo.DB) *{{.TblName.LCamel}}API {
-	return &{{.TblName.LCamel}}API{table: d.Table({{.TblName.Quoted}})}
+	return &{{.TblName.LCamel}}API{table: d.Table(fmt.Sprintf("%s%s", tableNamePrefix, {{.TblName.Quoted}}))}
 }
 
 // index-free APIs
