@@ -4,7 +4,7 @@
       attrName: uid
       attrType: string
   secondaryIndexes:
-    latest-index:
+    - name: latest-index
       pk:
         attrName: uid
         attrType: string
@@ -22,12 +22,12 @@
       attrName: hoge_id
       attrType: int
   secondaryIndexes:
-    fuga-index:
+    - name: fuga-index
       pk:
         attrName: fuga
         attrType: string
 
-    poyo-index:
+    - name: poyo-index
       pk:
         attrName: poyo
         attrType: string

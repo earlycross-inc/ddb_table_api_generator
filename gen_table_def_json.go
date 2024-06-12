@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/ettle/strcase"
 )
@@ -48,6 +49,8 @@ func extractAWSAttrDefs(tblDef tableDef) []awsDDBAttrDef {
 	for awsAttr := range attrs {
 		res = append(res, awsAttr)
 	}
+	// 属性の順序が毎度一定になるよう、属性名でソート
+	sort.Slice(res, func(i, j int) bool { return res[i].AttributeName < res[j].AttributeName })
 	return res
 }
 
@@ -58,7 +61,7 @@ type awsDDBKeyDef struct {
 
 type awsDDBKeySchema []awsDDBKeyDef
 
-func indexDefToKeySchema(idxDef indexDef) awsDDBKeySchema {
+func indexDefToKeySchema(idxDef IndexDef) awsDDBKeySchema {
 	res := make(awsDDBKeySchema, 0)
 
 	res = append(res, awsDDBKeyDef{
@@ -82,10 +85,10 @@ type awsDDBGSIDef struct {
 	}
 }
 
-func secondaryIndexDefToAWS(idxName string, idxDef indexDef) awsDDBGSIDef {
+func secondaryIndexDefToAWS(siDef secondaryIndexdef) awsDDBGSIDef {
 	return awsDDBGSIDef{
-		IndexName: idxName,
-		KeySchema: indexDefToKeySchema(idxDef),
+		IndexName: siDef.Name,
+		KeySchema: indexDefToKeySchema(siDef.IndexDef),
 		Projection: struct {
 			ProjectionType string
 		}{
@@ -121,8 +124,8 @@ var attrType2AWSAttrType = map[string]string{
 
 func tableDefToAWSDef(tblDef tableDef) awsDDBTableDef {
 	awsGSIs := make([]awsDDBGSIDef, 0, len(tblDef.SecondaryIndexes))
-	for idxName, idxDef := range tblDef.SecondaryIndexes {
-		awsGSIs = append(awsGSIs, secondaryIndexDefToAWS(idxName, idxDef))
+	for _, siDef := range tblDef.SecondaryIndexes {
+		awsGSIs = append(awsGSIs, secondaryIndexDefToAWS(siDef))
 	}
 
 	return awsDDBTableDef{

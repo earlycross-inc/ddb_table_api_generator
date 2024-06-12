@@ -3,8 +3,8 @@ package main
 // テーブル定義yamlファイルの1つのテーブル定義に対応する構造体
 type tableDef struct {
 	Name             string              `yaml:"tableName"`
-	PrimaryIndex     indexDef            `yaml:"primaryIndex"`
-	SecondaryIndexes map[string]indexDef `yaml:"secondaryIndexes"`
+	PrimaryIndex     IndexDef            `yaml:"primaryIndex"`
+	SecondaryIndexes []secondaryIndexdef `yaml:"secondaryIndexes"`
 	StreamEnabled    bool                `yaml:"streamEnabled"`
 }
 
@@ -27,10 +27,10 @@ func (t tableDef) isValid() bool {
 // テーブル定義データをコード生成テンプレートに渡すためのデータ構造に変換
 func (t tableDef) toGenDef() tableGenDef {
 	genScndIdxes := make([]indexGenDef, 0, len(t.SecondaryIndexes))
-	for idxName, idx := range t.SecondaryIndexes {
+	for _, idx := range t.SecondaryIndexes {
 		genScndIdxes = append(genScndIdxes, indexGenDef{
 			TblName: caseString(t.Name),
-			IdxName: caseString(idxName),
+			IdxName: caseString(idx.Name),
 			PK:      idx.PK.toGenDef(),
 			SK:      idx.SK.toGenDef(),
 		})
@@ -47,16 +47,29 @@ func (t tableDef) toGenDef() tableGenDef {
 	}
 }
 
-type indexDef struct {
+type IndexDef struct {
 	PK attrDef `yaml:"pk"`
 	SK attrDef `yaml:"sk"`
 }
 
-func (i indexDef) isValid() bool {
+func (i IndexDef) isValid() bool {
 	return i.PK.isValid() && !i.PK.isEmpty() && i.SK.isValid()
 }
 
-func (i indexDef) IsSimple() bool {
+func (i IndexDef) IsSimple() bool {
+	return i.PK.isValid() && i.SK.isEmpty()
+}
+
+type secondaryIndexdef struct {
+	Name     string `yaml:"name"`
+	IndexDef `yaml:",inline"`
+}
+
+func (i secondaryIndexdef) isValid() bool {
+	return i.Name != "" && i.PK.isValid() && !i.PK.isEmpty() && i.SK.isValid()
+}
+
+func (i secondaryIndexdef) IsSimple() bool {
 	return i.PK.isValid() && i.SK.isEmpty()
 }
 
