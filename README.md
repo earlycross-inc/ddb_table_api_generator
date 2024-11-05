@@ -5,6 +5,15 @@ DynamoDBテーブルスキーマ定義から以下を自動生成するツール
 - 基本的なテーブルの操作を行うコード
 - `aws dynamodb create-table`に渡すJSON形式のテーブル定義
 
+## インストール
+```sh
+# aws-sdk-go-v2 + dynamo/v2 を利用する場合
+go install github.com/earlycross-inc/ddb_table_api_generator/v2@latest
+
+# aws-sdk-go(v1) + dynamo(v1) を利用する場合
+go install github.com/earlycross-inc/ddb_table_api_generator@latest
+```
+
 ## 実行オプション
 
 生成したい対象に対応するオプションを指定する(指定がない場合何も生成しない)。
