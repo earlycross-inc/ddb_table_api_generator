@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 
-	"github.com/earlycross-inc/ddb_table_api_generator/test/ddbtbl"
+	"github.com/earlycross-inc/ddb_table_api_generator/v2/test/ddbtbl"
 	"github.com/guregu/dynamo/v2"
 )
 
