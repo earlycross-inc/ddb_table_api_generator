@@ -8,10 +8,10 @@ func(a *{{.TblName.LCamel}}API) WithPrimaryIndex({{.PK.AttrName.LCamel}} {{.PK.T
 }
 
 func (a *{{.TblName.LCamel}}API) BatchWithPrimaryIndex({{.PK.AttrName.LCamel}}List []{{.PK.Type.GoType}}) *batchWithPrimIdx {
-  dedup := make(map[{{.PK.Type.GoType}}]struct{})
-  for _, k := range {{.PK.AttrName.LCamel}}List {
-    dedup[k] = struct{}{}
-  }
+	dedup := make(map[{{.PK.Type.GoType}}]struct{})
+	for _, k := range {{.PK.AttrName.LCamel}}List {
+		dedup[k] = struct{}{}
+	}
 
 	ks := make([]dynamo.Keyed, 0, len(dedup))
 	for k := range dedup {

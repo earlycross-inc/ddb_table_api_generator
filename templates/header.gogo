@@ -3,9 +3,9 @@
 package ddbtbl
 
 import (
-  "fmt"
+	"fmt"
 
-  "github.com/guregu/dynamo"
+	"github.com/guregu/dynamo/v2"
 )
 
 type {{.TblName.LCamel}}API struct {

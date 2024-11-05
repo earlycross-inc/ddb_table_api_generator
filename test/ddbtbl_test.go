@@ -1,23 +1,26 @@
 package test
 
 import (
+	"context"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+
 	"github.com/earlycross-inc/ddb_table_api_generator/test/ddbtbl"
-	"github.com/guregu/dynamo"
+	"github.com/guregu/dynamo/v2"
 )
 
 func initDDBCli() *dynamo.DB {
-	sess := session.Must(session.NewSession(&aws.Config{
-		Region:      aws.String("ap-northeast-1"),
-		Endpoint:    aws.String("http://localhost:8100"),
-		Credentials: credentials.NewStaticCredentials("dummy", "dummy", ""),
-	}))
-
-	return dynamo.New(sess)
+	awsCnf := aws.Config{
+		Region:      "ap-northeast-1",
+		Credentials: credentials.NewStaticCredentialsProvider("dummy", "dummy", ""),
+	}
+	ddbSvc := dynamodb.NewFromConfig(awsCnf, func(o *dynamodb.Options) {
+		o.BaseEndpoint = aws.String("http://localhost:8100")
+	})
+	return dynamo.NewFromIface(ddbSvc)
 }
 
 type tUser struct {
@@ -26,8 +29,10 @@ type tUser struct {
 }
 
 func TestSimpleIndexAPI(t *testing.T) {
+	ctx := context.Background()
+
 	ddbCli := initDDBCli()
-	err := ddbCli.CreateTable("TUser", tUser{}).Run()
+	err := ddbCli.CreateTable("TUser", tUser{}).Run(ctx)
 	if err != nil {
 		t.Fatal("failed to create table TUser for test:", err)
 	}
@@ -38,13 +43,13 @@ func TestSimpleIndexAPI(t *testing.T) {
 		UID:  1,
 		Name: "hoge",
 	}
-	err = tUserAPI.Put(u1).Run()
+	err = tUserAPI.Put(u1).Run(ctx)
 	if err != nil {
 		t.Fatal("failed to put: ", err)
 	}
 
 	var getU1 tUser
-	err = tUserAPI.WithPrimaryIndex(u1.UID).Get().One(&getU1)
+	err = tUserAPI.WithPrimaryIndex(u1.UID).Get().One(ctx, &getU1)
 	if err != nil {
 		t.Fatal("failed to get: ", err)
 	}
@@ -53,11 +58,11 @@ func TestSimpleIndexAPI(t *testing.T) {
 	}
 
 	newU1Name := "fuga"
-	err = tUserAPI.WithPrimaryIndex(u1.UID).Update().Set("name", newU1Name).Run()
+	err = tUserAPI.WithPrimaryIndex(u1.UID).Update().Set("name", newU1Name).Run(ctx)
 	if err != nil {
 		t.Fatal("failed to update: ", err)
 	}
-	err = tUserAPI.WithPrimaryIndex(u1.UID).Get().One(&getU1)
+	err = tUserAPI.WithPrimaryIndex(u1.UID).Get().One(ctx, &getU1)
 	if err != nil {
 		t.Fatal("failed to get after update: ", err)
 	}
@@ -65,11 +70,11 @@ func TestSimpleIndexAPI(t *testing.T) {
 		t.Fatalf("unexpected updated user name: %s", getU1.Name)
 	}
 
-	err = tUserAPI.WithPrimaryIndex(u1.UID).Delete().Run()
+	err = tUserAPI.WithPrimaryIndex(u1.UID).Delete().Run(ctx)
 	if err != nil {
 		t.Fatal("failed to delete: ", err)
 	}
-	err = tUserAPI.WithPrimaryIndex(u1.UID).Get().One(&getU1)
+	err = tUserAPI.WithPrimaryIndex(u1.UID).Get().One(ctx, &getU1)
 	if err == nil {
 		t.Fatal("unexpectedly succeed to get deleted user")
 	} else if err != dynamo.ErrNotFound {
@@ -81,13 +86,13 @@ func TestSimpleIndexAPI(t *testing.T) {
 		tUser{UID: 2, Name: "test2"},
 		tUser{UID: 3, Name: "test3"},
 	}
-	_, err = tUserAPI.BatchPut(users...).Run()
+	_, err = tUserAPI.BatchPut(users...).Run(ctx)
 	if err != nil {
 		t.Fatal("failed to batchPut: ", err)
 	}
 
 	getUsers := make([]tUser, 0)
-	err = tUserAPI.Scan().All(&getUsers)
+	err = tUserAPI.Scan().All(ctx, &getUsers)
 	if err != nil {
 		t.Fatal("failed to scan: ", err)
 	}
@@ -96,7 +101,7 @@ func TestSimpleIndexAPI(t *testing.T) {
 	}
 
 	var getTest1 tUser
-	err = tUserAPI.WithNameIndex("test1").Get().One(&getTest1)
+	err = tUserAPI.WithNameIndex("test1").Get().One(ctx, &getTest1)
 	if err != nil {
 		t.Fatal("failed to get with name-index: ", err)
 	}
@@ -106,7 +111,7 @@ func TestSimpleIndexAPI(t *testing.T) {
 
 	targetUIDs := []int{1, 3, 3}
 	getUsers = make([]tUser, 0)
-	err = tUserAPI.BatchWithPrimaryIndex(targetUIDs).Get().All(&getUsers)
+	err = tUserAPI.BatchWithPrimaryIndex(targetUIDs).Get().All(ctx, &getUsers)
 	if err != nil {
 		t.Fatal("failed to batchGet: ", err)
 	}
@@ -117,13 +122,13 @@ func TestSimpleIndexAPI(t *testing.T) {
 	delUIDs := []int{1, 2}
 	_, err = tUserAPI.BatchWithPrimaryIndex(delUIDs).Delete().
 		Put(tUser{UID: 4, Name: "test4"}, tUser{UID: 5, Name: "test5"}).
-		Run()
+		Run(ctx)
 	if err != nil {
 		t.Fatal("failed to batchWrite: ", err)
 	}
 
 	getUsers = make([]tUser, 0)
-	err = tUserAPI.Scan().All(&getUsers)
+	err = tUserAPI.Scan().All(ctx, &getUsers)
 	if err != nil {
 		t.Fatal("failed to scan(after batchWrite): ", err)
 	}
@@ -140,8 +145,10 @@ type tUserStageRanking struct {
 }
 
 func TestCompositeIndexAPI(t *testing.T) {
+	ctx := context.Background()
+
 	ddbCli := initDDBCli()
-	err := ddbCli.CreateTable("TUserStageRanking", tUserStageRanking{}).Run()
+	err := ddbCli.CreateTable("TUserStageRanking", tUserStageRanking{}).Run(ctx)
 	if err != nil {
 		t.Fatal("failed to create table TUserStageRanking for test: ", err)
 	}
@@ -154,10 +161,10 @@ func TestCompositeIndexAPI(t *testing.T) {
 		Pkey:  "p-1",
 		Score: 100,
 	}
-	_ = tRankingAPI.Put(record1).Run()
+	_ = tRankingAPI.Put(record1).Run(ctx)
 
 	var getRecord1 tUserStageRanking
-	err = tRankingAPI.WithPrimaryIndex(record1.UID, record1.StgID).Get().One(&getRecord1)
+	err = tRankingAPI.WithPrimaryIndex(record1.UID, record1.StgID).Get().One(ctx, &getRecord1)
 	if err != nil {
 		t.Fatal("failed to get: ", err)
 	}
@@ -165,7 +172,7 @@ func TestCompositeIndexAPI(t *testing.T) {
 		t.Fatalf("unexpected score: %d", getRecord1.Score)
 	}
 
-	err = tRankingAPI.WithPkeyIndex(record1.Pkey, record1.Score).Get().One(&getRecord1)
+	err = tRankingAPI.WithPkeyIndex(record1.Pkey, record1.Score).Get().One(ctx, &getRecord1)
 	if err != nil {
 		t.Fatal("failed to get by pkey index: ", err)
 	}
@@ -174,11 +181,11 @@ func TestCompositeIndexAPI(t *testing.T) {
 	}
 
 	newScore := 200
-	err = tRankingAPI.WithPrimaryIndex(record1.UID, record1.StgID).Update().Set("score", newScore).Run()
+	err = tRankingAPI.WithPrimaryIndex(record1.UID, record1.StgID).Update().Set("score", newScore).Run(ctx)
 	if err != nil {
 		t.Fatal("failed to update: ", err)
 	}
-	err = tRankingAPI.WithPrimaryIndex(record1.UID, record1.StgID).Get().One(&getRecord1)
+	err = tRankingAPI.WithPrimaryIndex(record1.UID, record1.StgID).Get().One(ctx, &getRecord1)
 	if err != nil {
 		t.Fatal("failed to get after update: ", err)
 	}
@@ -186,11 +193,11 @@ func TestCompositeIndexAPI(t *testing.T) {
 		t.Fatalf("unexpected updated score: %d", getRecord1.Score)
 	}
 
-	err = tRankingAPI.WithPrimaryIndex(record1.UID, record1.StgID).Delete().Run()
+	err = tRankingAPI.WithPrimaryIndex(record1.UID, record1.StgID).Delete().Run(ctx)
 	if err != nil {
 		t.Fatal("failed to delete: ", err)
 	}
-	err = tRankingAPI.WithPrimaryIndex(record1.UID, record1.StgID).Get().One(&getRecord1)
+	err = tRankingAPI.WithPrimaryIndex(record1.UID, record1.StgID).Get().One(ctx, &getRecord1)
 	if err == nil {
 		t.Fatal("unexpectedly succeed to get deleted record")
 	} else if err != dynamo.ErrNotFound {
@@ -205,10 +212,10 @@ func TestCompositeIndexAPI(t *testing.T) {
 		tUserStageRanking{UID: 22, StgID: 2, Pkey: "p-2", Score: 150},
 		tUserStageRanking{UID: 22, StgID: 3, Pkey: "p-2", Score: 190},
 	}
-	_, _ = tRankingAPI.BatchPut(records...).Run()
+	_, _ = tRankingAPI.BatchPut(records...).Run(ctx)
 
 	getRecords := make([]tUserStageRanking, 0)
-	err = tRankingAPI.QueryWithPrimaryIndex(22).WhereSK(dynamo.LessOrEqual, 2).All(&getRecords)
+	err = tRankingAPI.QueryWithPrimaryIndex(22).WhereSK(dynamo.LessOrEqual, 2).All(ctx, &getRecords)
 	if err != nil {
 		t.Fatal("failed to query with uid: ", err)
 	}
@@ -217,7 +224,7 @@ func TestCompositeIndexAPI(t *testing.T) {
 	}
 
 	getRecords = make([]tUserStageRanking, 0)
-	err = tRankingAPI.QueryWithPkeyIndex("p-2").All().All(&getRecords)
+	err = tRankingAPI.QueryWithPkeyIndex("p-2").All().All(ctx, &getRecords)
 	if err != nil {
 		t.Fatal("failed to query with pkey: ", err)
 	}
@@ -232,7 +239,7 @@ func TestCompositeIndexAPI(t *testing.T) {
 		{Uid: 12, StgId: 1},
 	}
 	getRecords = make([]tUserStageRanking, 0)
-	err = tRankingAPI.BatchWithPrimaryIndex(primIdxKeys).Get().All(&getRecords)
+	err = tRankingAPI.BatchWithPrimaryIndex(primIdxKeys).Get().All(ctx, &getRecords)
 	if err != nil {
 		t.Fatal("failed to batchGet with primary key: ", err)
 	}
